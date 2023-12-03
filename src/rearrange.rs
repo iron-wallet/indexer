@@ -3,7 +3,7 @@ use std::collections::{BTreeSet, HashMap};
 use crate::db::models::BackfillJob;
 
 /// Assumes jobs are already sorted by from_block
-pub fn rearrange(jobs: &[BackfillJob], chain_id: i32) -> Vec<BackfillJob> {
+pub fn rearrange(jobs: &[BackfillJob]) -> Vec<BackfillJob> {
     let points = jobs
         .iter()
         .filter(|j| j.low == j.high) // filter out empty jobs
@@ -43,7 +43,6 @@ pub fn rearrange(jobs: &[BackfillJob], chain_id: i32) -> Vec<BackfillJob> {
     range_map.into_iter().for_each(|((low, high), addresses)| {
         res.push(BackfillJob {
             addresses,
-            chain_id,
             low,
             high,
         })
@@ -68,7 +67,7 @@ mod tests {
     #[case(vec![(0x1, 10, 20), (0x2, 15, 25), (0x3, 20, 30)], vec![(vec![0x1], 10, 14), (vec![0x1, 0x2], 15, 19), (vec![0x1, 0x2, 0x3], 20, 20), (vec![0x2, 0x3], 21, 25), (vec![0x3], 26, 30)])]
     fn test(#[case] ranges: Vec<Mock>, #[case] expected: Vec<Expectation>) {
         let ranges = ranges_to_jobs(ranges);
-        let result = rearrange(&ranges, 1);
+        let result = rearrange(&ranges);
 
         compare(result, expected);
     }
@@ -83,7 +82,6 @@ mod tests {
                     low,
                     high,
                     addresses: vec![address],
-                    chain_id: 1,
                 }
             })
             .collect()

@@ -194,7 +194,7 @@ impl Db {
                     .load(&mut conn)
                     .await?;
 
-                let rearranged = crate::rearrange::rearrange(&jobs, self.chain_id);
+                let rearranged = crate::rearrange::rearrange(&jobs);
 
                 delete(dsl::backfill_jobs).execute(&mut conn).await?;
 
