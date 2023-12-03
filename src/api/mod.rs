@@ -7,13 +7,16 @@ use tokio::task::JoinHandle;
 use tracing::instrument;
 use tracing_actix_web::TracingLogger;
 
-use crate::{config::Config, db::Db};
+use crate::{config::Config, db::PgBackend};
 
 pub struct Api;
 
 impl Api {
     #[instrument(name = "api", skip(db, config), fields(port = config.http.port))]
-    pub fn start(db: Db, config: Config) -> JoinHandle<std::result::Result<(), std::io::Error>> {
+    pub fn start(
+        db: PgBackend,
+        config: Config,
+    ) -> JoinHandle<std::result::Result<(), std::io::Error>> {
         let server = HttpServer::new(move || {
             let cors = Cors::default()
                 .allow_any_origin()

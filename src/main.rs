@@ -11,6 +11,7 @@ use tracing_subscriber::{fmt::format::FmtSpan, EnvFilter};
 use config::Config;
 
 use self::api::Api;
+use self::db::Db;
 use self::sync::{BackfillManager, Forward};
 
 #[tokio::main]
@@ -21,7 +22,7 @@ async fn main() -> Result<()> {
 
     let (account_tx, account_rx) = mpsc::unbounded_channel();
     let (job_tx, job_rx) = mpsc::unbounded_channel();
-    let db = db::Db::connect(&config, account_tx, job_tx).await?;
+    let db = db::PgBackend::connect(&config, account_tx, job_tx).await?;
 
     let sync = Forward::start(db.clone(), &config, account_rx).await?;
     let backfill = BackfillManager::start(db.clone(), &config, job_rx).await?;

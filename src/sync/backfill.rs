@@ -10,9 +10,10 @@ use tokio::{
 };
 use tracing::instrument;
 
+use crate::db::Db;
 use crate::{
     config::Config,
-    db::{models::BackfillJobWithId, Db},
+    db::{models::BackfillJobWithId, PgBackend},
 };
 
 use super::provider::Provider;
@@ -23,7 +24,7 @@ use super::{SyncJob, Worker};
 /// Processes a list of addresses determined by the rearrangment logic defined in
 /// `crate::db::rearrange_backfill`
 pub struct BackfillManager {
-    db: Db,
+    db: PgBackend,
     concurrency: usize,
     jobs_rcv: UnboundedReceiver<()>,
     config: Arc<RwLock<Config>>,
@@ -31,7 +32,7 @@ pub struct BackfillManager {
 
 impl BackfillManager {
     pub async fn start(
-        db: Db,
+        db: PgBackend,
         config: &Config,
         jobs_rcv: UnboundedReceiver<()>,
     ) -> Result<JoinHandle<Result<()>>> {
@@ -146,7 +147,7 @@ impl Worker<Backfill> {
 
 impl Backfill {
     async fn new_worker(
-        db: Db,
+        db: PgBackend,
         config: Arc<RwLock<Config>>,
         job: BackfillJobWithId,
         shutdown: broadcast::Receiver<()>,
