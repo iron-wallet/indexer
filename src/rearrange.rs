@@ -61,6 +61,7 @@ mod tests {
     type Expectation = (Vec<u8>, i32, i32);
 
     #[rstest]
+    #[case(vec![(0x1, 1, 1)], vec![])]
     #[case(vec![(0x1, 1, 2), (0x2, 1, 3)], vec![(vec![0x1, 0x2], 1, 2), (vec![0x2], 3, 3)])]
     #[case(vec![(0x1, 1, 10), (0x2, 5, 15)], vec![(vec![0x1], 1, 4), (vec![0x1, 0x2], 5, 10), (vec![0x2], 11, 15)])]
     #[case(vec![(0x1, 1, 1), (0x2, 2, 2), (0x3, 3, 3)], vec![(vec![0x1], 1, 1), (vec![0x2], 2, 2), (vec![0x3], 3, 3)])]
