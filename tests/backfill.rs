@@ -1,5 +1,7 @@
 mod utils;
 
+use std::sync::Arc;
+
 use color_eyre::Result;
 use iron_indexer::db::types::Address;
 use iron_indexer::{
@@ -8,7 +10,8 @@ use iron_indexer::{
     sync::BackfillManager,
 };
 
-use tokio::sync::mpsc;
+use reth_primitives::revm_primitives::HashMap;
+use tokio::sync::{mpsc, Mutex};
 use tokio::time::sleep;
 use utils::test_db::TestDb;
 
@@ -46,9 +49,13 @@ async fn backfill_covers_all_ranges() -> Result<()> {
     let backfill =
         BackfillManager::<TestProvider, TestDb>::start(db.clone(), &config, job_rx).await?;
 
-    // while let Some(msg) = receiver.recv().await {
-    //     dbg!(msg);
-    // }
+    let counters = HashMap::new();
+    let mut events = 0;
+    while let Some((id, high)) = receiver.recv().await {
+        counters.insert(id, high);
+        dbg!(msg);
+        events += 1;
+    }
 
     sleep(std::time::Duration::from_millis(1000)).await;
 
