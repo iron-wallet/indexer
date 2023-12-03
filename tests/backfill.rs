@@ -51,6 +51,7 @@ async fn backfill_covers_all_ranges() -> Result<()> {
 
     let counters = HashMap::new();
     let mut events = 0;
+    // TODO: assert that we never query the same block twice
     while let Some((id, high)) = receiver.recv().await {
         counters.insert(id, high);
         dbg!(msg);
