@@ -9,8 +9,10 @@ use diesel_async::{
 use tokio::sync::mpsc::UnboundedSender;
 use tracing::instrument;
 
-use crate::config::{ChainConfig, Config};
-use crate::db::models::{BackfillJob, BackfillJobWithId};
+use crate::{
+    config::{ChainConfig, Config},
+    db::models::{BackfillJob, BackfillJobWithId},
+};
 
 use super::{
     models::{Chain, CreateTx},

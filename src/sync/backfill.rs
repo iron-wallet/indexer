@@ -16,27 +16,29 @@ use crate::{
     db::{models::BackfillJobWithId, PgBackend},
 };
 
-use super::provider::Provider;
+use super::provider::{Provider, RethDBProvider};
 use super::{SyncJob, Worker};
 
 /// Backfill job
 /// Walks the blockchain backwards, within a fixed range
 /// Processes a list of addresses determined by the rearrangment logic defined in
 /// `crate::db::rearrange_backfill`
-pub struct BackfillManager {
-    db: PgBackend,
+pub struct BackfillManager<P: Provider = RethDBProvider, D: Db = PgBackend> {
+    marker: std::marker::PhantomData<P>,
+    db: D,
     concurrency: usize,
     jobs_rcv: UnboundedReceiver<()>,
     config: Arc<RwLock<Config>>,
 }
 
-impl BackfillManager {
+impl<P: Provider + 'static, D: Db + 'static> BackfillManager<P, D> {
     pub async fn start(
-        db: PgBackend,
+        db: D,
         config: &Config,
         jobs_rcv: UnboundedReceiver<()>,
     ) -> Result<JoinHandle<Result<()>>> {
         let sync = Self {
+            marker: Default::default(),
             db,
             jobs_rcv,
             config: Arc::new(RwLock::new(config.clone())),
@@ -69,7 +71,7 @@ impl BackfillManager {
                         if shutdown.try_recv().is_ok() {
                             return Ok(());
                         }
-                        let worker = Backfill::new_worker(db, config, job, shutdown)
+                        let worker = Backfill::<P, D>::new_worker(db, config, job, shutdown)
                             .await
                             .unwrap();
                         worker.run().await
@@ -93,7 +95,8 @@ impl BackfillManager {
     }
 }
 
-pub struct Backfill {
+pub struct Backfill<P: Provider, D: Db> {
+    marker: std::marker::PhantomData<(P, D)>,
     job_id: i32,
     high: u64,
     low: u64,
@@ -101,7 +104,7 @@ pub struct Backfill {
 }
 
 #[async_trait]
-impl SyncJob for Worker<Backfill> {
+impl<P: Provider + 'static, D: Db + 'static> SyncJob for Worker<Backfill<P, D>, P, D> {
     #[instrument(skip(self), fields(chain_id = self.chain.chain_id))]
     async fn run(mut self) -> Result<()> {
         for block in (self.inner.low..self.inner.high).rev() {
@@ -123,7 +126,7 @@ impl SyncJob for Worker<Backfill> {
     }
 }
 
-impl Worker<Backfill> {
+impl<P: Provider + 'static, D: Db + 'static> Worker<Backfill<P, D>, P, D> {
     /// if the buffer is sufficiently large, flush it to the database
     /// and update chain tip
     pub async fn maybe_flush(&mut self, last_block: u64) -> Result<()> {
@@ -145,17 +148,18 @@ impl Worker<Backfill> {
     }
 }
 
-impl Backfill {
+impl<P: Provider, D: Db> Backfill<P, D> {
     async fn new_worker(
-        db: PgBackend,
+        db: D,
         config: Arc<RwLock<Config>>,
         job: BackfillJobWithId,
         shutdown: broadcast::Receiver<()>,
-    ) -> Result<Worker<Self>> {
+    ) -> Result<Worker<Self, P, D>> {
         let config = config.read().await;
         let chain = db.setup_chain(&config.chain).await?;
 
         let s = Self {
+            marker: Default::default(),
             job_id: job.id,
             high: job.high as u64,
             low: job.low as u64,

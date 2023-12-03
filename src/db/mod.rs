@@ -1,7 +1,7 @@
 pub mod models;
 mod pg_backend;
 mod schema;
-mod types;
+pub mod types;
 
 use async_trait::async_trait;
 use color_eyre::Result;
@@ -21,7 +21,7 @@ pub use pg_backend::PgBackend;
 /// In production, `PgBackend` is meant to be used, but the trait allows for the existance of
 /// `InMemoryBackend` as well, which is useful for testing
 #[async_trait]
-pub trait Db: Sized {
+pub trait Db: Sized + Clone + Send {
     async fn connect(
         config: &Config,
         new_accounts_tx: UnboundedSender<alloy_primitives::Address>,

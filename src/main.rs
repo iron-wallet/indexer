@@ -10,9 +10,8 @@ use tracing_subscriber::{fmt::format::FmtSpan, EnvFilter};
 
 use config::Config;
 
-use self::api::Api;
 use self::db::Db;
-use self::sync::{BackfillManager, Forward};
+use self::sync::{BackfillManager, Forward, RethDBProvider};
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -25,8 +24,8 @@ async fn main() -> Result<()> {
     let db = db::PgBackend::connect(&config, account_tx, job_tx).await?;
 
     let sync = Forward::start(db.clone(), &config, account_rx).await?;
-    let backfill = BackfillManager::start(db.clone(), &config, job_rx).await?;
-    let api = Api::start(db, config);
+    let backfill = BackfillManager::<RethDBProvider>::start(db.clone(), &config, job_rx).await?;
+    let api = api::start(db, config);
 
     // pin!(sync, db, api);
     let (sync, backfill, api) = futures::try_join!(sync, backfill, api)?;

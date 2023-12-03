@@ -22,7 +22,7 @@ pub struct RethDBProvider {
     provider: DatabaseProvider<Tx<RO>>,
 }
 
-pub trait Provider: Sized {
+pub trait Provider: Sized + Send {
     /// Creates a new provider
     fn new(config: &Config, chain: &Chain) -> Result<Self>;
 

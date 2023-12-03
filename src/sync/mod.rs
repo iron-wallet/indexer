@@ -28,8 +28,7 @@ use crate::{
 
 pub use backfill::BackfillManager;
 pub use forward::Forward;
-
-use self::provider::{Provider, RethDBProvider};
+pub use provider::{Provider, RethDBProvider};
 
 /// Generic sync job state
 pub struct Worker<T, P: Provider = RethDBProvider, D: Db = PgBackend> {
