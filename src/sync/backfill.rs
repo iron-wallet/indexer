@@ -1,20 +1,21 @@
-use std::sync::Arc;
-use std::time::Duration;
+use std::{sync::Arc, time::Duration};
 
 use async_trait::async_trait;
 use color_eyre::eyre::Result;
-use reth_provider::HeaderProvider;
 use tokio::select;
-use tokio::sync::mpsc::UnboundedReceiver;
-use tokio::sync::{broadcast, RwLock, Semaphore};
-use tokio::task::JoinHandle;
-use tokio::time::sleep;
+use tokio::{
+    sync::{broadcast, mpsc::UnboundedReceiver, RwLock, Semaphore},
+    task::JoinHandle,
+    time::sleep,
+};
 use tracing::instrument;
 
-use crate::config::Config;
-use crate::db::models::BackfillJobWithId;
-use crate::db::Db;
+use crate::{
+    config::Config,
+    db::{models::BackfillJobWithId, Db},
+};
 
+use super::provider::Provider;
 use super::{SyncJob, Worker};
 
 /// Backfill job
@@ -108,7 +109,7 @@ impl SyncJob for Worker<Backfill> {
                 break;
             }
 
-            let header = self.provider.header_by_number(block)?.unwrap();
+            let header = self.provider.block_header(block)?.unwrap();
             self.process_block(&header).await?;
             self.maybe_flush(block).await?;
         }

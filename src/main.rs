@@ -1,7 +1,6 @@
 mod api;
 mod config;
 mod db;
-mod provider;
 mod rearrange;
 mod sync;
 
