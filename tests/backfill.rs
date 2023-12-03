@@ -9,6 +9,7 @@ use iron_indexer::{
 };
 
 use tokio::sync::mpsc;
+use tokio::time::sleep;
 use utils::test_db::TestDb;
 
 use crate::utils::test_provider::TestProvider;
@@ -23,7 +24,7 @@ async fn backfill_covers_all_ranges() -> Result<()> {
         },
         sync: SyncConfig {
             seed_addresses: Default::default(),
-            buffer_size: 10,
+            buffer_size: 0,
             backfill_concurrency: 10,
         },
         http: HttpConfig { port: 0 },
@@ -36,16 +37,22 @@ async fn backfill_covers_all_ranges() -> Result<()> {
     let db = TestDb::connect(&config, account_tx, job_tx).await?;
 
     db.create_backfill_job(u8_to_addr(0x1), 10, 20).await?;
-    db.create_backfill_job(u8_to_addr(0x2), 15, 25).await?;
-    db.create_backfill_job(u8_to_addr(0x3), 20, 30).await?;
+    // db.create_backfill_job(u8_to_addr(0x2), 15, 25).await?;
+    // db.create_backfill_job(u8_to_addr(0x3), 20, 30).await?;
+
+    let receiver = TestProvider::receiver();
+    let mut receiver = receiver.lock().await;
 
     let backfill =
         BackfillManager::<TestProvider, TestDb>::start(db.clone(), &config, job_rx).await?;
 
-    backfill.await??;
+    // while let Some(msg) = receiver.recv().await {
+    //     dbg!(msg);
+    // }
 
-    assert_eq!(1, 1);
+    sleep(std::time::Duration::from_millis(1000)).await;
 
+    panic!();
     Ok(())
 }
 

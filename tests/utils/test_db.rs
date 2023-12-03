@@ -34,7 +34,12 @@ impl Db for TestDb {
     }
 
     async fn setup_chain(&self, _chain: &ChainConfig) -> Result<Chain> {
-        todo!("not needed so far")
+        Ok(Chain {
+            chain_id: 1,
+            start_block: 0,
+            last_known_block: 0,
+            updated_at: Default::default(),
+        })
     }
 
     /// Updates the last known block for a chain
@@ -47,7 +52,7 @@ impl Db for TestDb {
     }
 
     async fn create_txs(&self, _txs: Vec<CreateTx>) -> Result<()> {
-        todo!("not needed so far")
+        Ok(())
     }
 
     async fn create_backfill_job(&self, address: Address, low: i32, high: i32) -> Result<()> {
@@ -96,7 +101,9 @@ impl Db for TestDb {
         Ok(())
     }
 
-    async fn update_job(&self, _id: i32, _high: u64) -> Result<()> {
-        todo!("not needed so far")
+    async fn update_job(&self, id: i32, high: u64) -> Result<()> {
+        SENDER.send((id, high)).unwrap();
+        dbg!(_id, _high);
+        Ok(())
     }
 }

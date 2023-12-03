@@ -82,11 +82,12 @@ impl<P: Provider + 'static, D: Db + 'static> BackfillManager<P, D> {
             // wait for a new job, or a preset delay, whichever comes first
             let timeout = sleep(Duration::from_secs(10 * 60));
             select! {
-                _ = timeout => {}
-                _ = self.jobs_rcv.recv() => {}
+                _ = timeout => {dbg!("timeout");}
+                Some(_) = self.jobs_rcv.recv() => {dbg!("rcv");}
             }
 
             // shutdown, time to re-org and reprioritize
+            dbg!("sending");
             shutdown.send(())?;
             for worker in workers {
                 worker.await.unwrap().unwrap();
@@ -102,7 +103,6 @@ pub struct Backfill<P: Provider, D: Db> {
     low: u64,
     shutdown: broadcast::Receiver<()>,
 }
-
 #[async_trait]
 impl<P: Provider + 'static, D: Db + 'static> SyncJob for Worker<Backfill<P, D>, P, D> {
     #[instrument(skip(self), fields(chain_id = self.chain.chain_id))]
