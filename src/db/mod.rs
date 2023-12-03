@@ -41,13 +41,7 @@ pub trait Db: Sized + Clone + Send {
 
     async fn create_txs(&self, txs: Vec<CreateTx>) -> Result<()>;
 
-    async fn create_backfill_job(
-        &self,
-        address: Address,
-        chain_id: i32,
-        low: i32,
-        high: i32,
-    ) -> Result<()>;
+    async fn create_backfill_job(&self, address: Address, low: i32, high: i32) -> Result<()>;
 
     async fn get_backfill_jobs(&self) -> Result<Vec<BackfillJobWithId>>;
 

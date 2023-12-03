@@ -65,7 +65,6 @@ impl Worker<Forward> {
         self.db
             .create_backfill_job(
                 address.into(),
-                self.chain.chain_id,
                 self.chain.start_block,
                 self.inner.next_block as i32,
             )

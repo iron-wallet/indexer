@@ -3,7 +3,7 @@ use std::collections::{BTreeSet, HashMap};
 use crate::db::models::BackfillJob;
 
 /// Assumes jobs are already sorted by from_block
-pub fn rearrange(jobs: Vec<BackfillJob>, chain_id: i32) -> Vec<BackfillJob> {
+pub fn rearrange(jobs: &Vec<BackfillJob>, chain_id: i32) -> Vec<BackfillJob> {
     let points = jobs.iter().fold(BTreeSet::new(), |mut acc, j| {
         acc.insert(j.low);
         acc.insert(j.high);
@@ -65,9 +65,7 @@ mod tests {
     #[case(vec![(0x1, 10, 20), (0x2, 15, 25), (0x3, 20, 30)], vec![(vec![0x1], 10, 14), (vec![0x1, 0x2], 15, 19), (vec![0x1, 0x2, 0x3], 20, 20), (vec![0x2, 0x3], 21, 25), (vec![0x3], 26, 30)])]
     fn test(#[case] ranges: Vec<Mock>, #[case] expected: Vec<Expectation>) {
         let ranges = ranges_to_jobs(ranges);
-        dbg!(&ranges);
-        let result = rearrange(ranges, 1);
-        dbg!(&result);
+        let result = rearrange(&ranges, 1);
 
         compare(result, expected);
     }

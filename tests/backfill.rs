@@ -1,6 +1,7 @@
 mod utils;
 
 use color_eyre::Result;
+use iron_indexer::db::types::Address;
 use iron_indexer::{
     config::{ChainConfig, Config, DbConfig, HttpConfig, RethConfig, SyncConfig},
     db::Db,
@@ -29,14 +30,26 @@ async fn backfill_covers_all_ranges() -> Result<()> {
         db: DbConfig { url: "".into() },
     };
 
-    let (account_tx, account_rx) = mpsc::unbounded_channel();
+    let (account_tx, _account_rx) = mpsc::unbounded_channel();
     let (job_tx, job_rx) = mpsc::unbounded_channel();
 
     let db = TestDb::connect(&config, account_tx, job_tx).await?;
 
+    db.create_backfill_job(u8_to_addr(0x1), 10, 20).await?;
+    db.create_backfill_job(u8_to_addr(0x2), 15, 25).await?;
+    db.create_backfill_job(u8_to_addr(0x3), 20, 30).await?;
+
     let backfill =
         BackfillManager::<TestProvider, TestDb>::start(db.clone(), &config, job_rx).await?;
+
+    backfill.await??;
+
     assert_eq!(1, 1);
 
     Ok(())
+}
+
+fn u8_to_addr(n: u8) -> Address {
+    let slice = &[n; 20];
+    alloy_primitives::Address::from_slice(slice).into()
 }

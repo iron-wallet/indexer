@@ -137,20 +137,14 @@ impl Db for PgBackend {
     }
 
     #[instrument(skip(self))]
-    async fn create_backfill_job(
-        &self,
-        address: Address,
-        chain_id: i32,
-        low: i32,
-        high: i32,
-    ) -> Result<()> {
+    async fn create_backfill_job(&self, address: Address, low: i32, high: i32) -> Result<()> {
         use schema::backfill_jobs::dsl;
         let mut conn = self.pool.get().await?;
 
         let res = insert_into(dsl::backfill_jobs)
             .values((
                 dsl::addresses.eq(vec![address]),
-                dsl::chain_id.eq(chain_id),
+                dsl::chain_id.eq(self.chain_id),
                 dsl::low.eq(low),
                 dsl::high.eq(high),
             ))
@@ -196,7 +190,7 @@ impl Db for PgBackend {
                     .load(&mut conn)
                     .await?;
 
-                let rearranged = crate::rearrange::rearrange(jobs, self.chain_id);
+                let rearranged = crate::rearrange::rearrange(&jobs, self.chain_id);
 
                 delete(dsl::backfill_jobs).execute(&mut conn).await?;
 
