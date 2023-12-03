@@ -17,12 +17,11 @@ use scalable_cuckoo_filter::{DefaultHasher, ScalableCuckooFilter, ScalableCuckoo
 use tokio::time::sleep;
 use tracing::trace;
 
-use crate::db::Db;
 use crate::{
     config::Config,
     db::{
         models::{Chain, CreateTx},
-        PgBackend,
+        Db,
     },
 };
 
@@ -31,12 +30,12 @@ pub use forward::Forward;
 pub use provider::{Provider, RethDBProvider};
 
 /// Generic sync job state
-pub struct Worker<T, P: Provider = RethDBProvider, D: Db = PgBackend> {
+pub struct Worker<T> {
     inner: T,
-    provider: P,
+    provider: RethDBProvider,
 
     /// DB handle
-    db: D,
+    db: Db,
 
     /// Chain configuration
     chain: Chain,
@@ -67,9 +66,9 @@ pub trait SyncJob {
     async fn run(mut self) -> Result<()>;
 }
 
-impl<T, P: Provider, D: Db> Worker<T, P, D> {
-    async fn new(inner: T, db: D, config: &Config, chain: Chain) -> Result<Self> {
-        let provider = P::new(config, &chain)?;
+impl<T> Worker<T> {
+    async fn new(inner: T, db: Db, config: &Config, chain: Chain) -> Result<Self> {
+        let provider = RethDBProvider::new(config, &chain)?;
 
         let mut cuckoo = ScalableCuckooFilterBuilder::new()
             .initial_capacity(1000)

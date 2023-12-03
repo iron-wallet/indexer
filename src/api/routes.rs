@@ -1,5 +1,5 @@
 use super::error::Result;
-use crate::db::{Db, PgBackend};
+use crate::db::Db;
 use actix_web::{
     get, post,
     web::{self, Json},
@@ -18,10 +18,7 @@ struct Register {
 }
 
 #[post("/register")]
-async fn register(
-    db: web::Data<PgBackend>,
-    Json(register): Json<Register>,
-) -> Result<impl Responder> {
+async fn register(db: web::Data<Db>, Json(register): Json<Register>) -> Result<impl Responder> {
     db.register(register.address.into()).await?;
 
     Ok(HttpResponse::Ok())

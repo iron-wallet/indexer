@@ -3,7 +3,7 @@ use std::collections::{BTreeSet, HashMap};
 use crate::db::models::BackfillJob;
 
 /// Assumes jobs are already sorted by from_block
-pub fn rearrange(jobs: &Vec<BackfillJob>, chain_id: i32) -> Vec<BackfillJob> {
+pub fn rearrange(jobs: &[BackfillJob], chain_id: i32) -> Vec<BackfillJob> {
     let points = jobs
         .iter()
         .filter(|j| j.low == j.high) // filter out empty jobs

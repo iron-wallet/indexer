@@ -4,8 +4,7 @@ use color_eyre::eyre::Result;
 use tokio::{sync::mpsc::UnboundedReceiver, task::JoinHandle};
 use tracing::instrument;
 
-use crate::db::Db;
-use crate::{config::Config, db::PgBackend};
+use crate::{config::Config, db::Db};
 
 use super::provider::Provider;
 use super::{SyncJob, Worker};
@@ -97,7 +96,7 @@ impl Worker<Forward> {
 
 impl Forward {
     pub async fn start(
-        db: PgBackend,
+        db: Db,
         config: &Config,
         accounts_rcv: UnboundedReceiver<Address>,
     ) -> Result<JoinHandle<Result<()>>> {
